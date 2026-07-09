@@ -17,13 +17,13 @@ Before starting, make sure you have Python installed on your system. This projec
   git clone <https://github.com/luijait/DarkGPT.git>
   cd DarkGPT
 
-1.**Configure Environment Variables**
+2.**Configure Environment Variables**
 
    You will need to set up some environment variables for the script to work correctly. Copy the `.env.example` file to a new file named `.env`:
 
    DEHASHED_API_KEY="your_dehashed_api_key_here"
 
-2. **Create a virtual environment**
+3.**Create a virtual environment**
 
    It is recommended to use a virtual environment to manage dependencies safely:
 
@@ -34,7 +34,7 @@ Before starting, make sure you have Python installed on your system. This projec
 
    (.venv) user@machine ~/DarkGPT$
 
-3. **Install dependencies**
+4.**Install dependencies**
 
    Install the required Python packages inside the active virtual environment:
 
@@ -48,35 +48,35 @@ Before starting, make sure you have Python installed on your system. This projec
 
    python3 -m pytest tests/test_import.py
 
-4. **Run the project**
+5.**Run the project**
 
    With the virtual environment active, start the CLI:
 
    python3 main.py
 
-   ## Or run via module
+## Or run via module
 
    python3 -m darkgpt.main
 
-5. **Runtime check**
+6.**Runtime check**
 
    Verify the package imports successfully before starting the app:
 
    python3 -c "import darkgpt; print('darkgpt import OK')"
 
-6. **Run tests**
+7.**Run tests**
 
    Execute the import test with pytest:
 
    python3 -m pytest tests/test_import.py
 
-7. **Package install option**
+8.**Package install option**
 
    Install the package in editable mode to use the entry point directly:
 
    python3 -m pip install -e .
 
-7.**Deactivate the virtual environment**
+9.**Deactivate the virtual environment**
 
    When you are finished working with the project, deactivate the active environment with:
 

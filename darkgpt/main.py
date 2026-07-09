@@ -1,5 +1,7 @@
 import os
 
+from darkgpt.DarkAgent import DarkGPT
+from darkgpt.cli import ConversationalShell
 from darkgpt.main_1 import main
 
 banner = """
