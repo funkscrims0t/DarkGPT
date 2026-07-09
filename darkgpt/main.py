@@ -1,6 +1,6 @@
 import os
-from .DarkAgent import DarkGPT
-from .cli import ConversationalShell
+
+from darkgpt.main_1 import main
 
 banner = """
 DarkGPT

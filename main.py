@@ -1,5 +1,5 @@
 # Importación de módulos necesarios
-from darkgpt.main import main
+from darkgpt.main_1 import main
 
 # Banner de inicio para la aplicación, mostrando un diseño ASCII con el creador
 banner = """
