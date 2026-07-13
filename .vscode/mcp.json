@@ -1,0 +1,112 @@
+{
+	"servers": {
+		"io.github.CrowdStrike/falcon-mcp": {
+			"type": "stdio",
+			"command": "uvx",
+			"args": [
+				"falcon-mcp@0.13.0"
+			],
+			"env": {
+				"FALCON_CLIENT_ID": "${input:FALCON_CLIENT_ID}",
+				"FALCON_CLIENT_SECRET": "${input:FALCON_CLIENT_SECRET}",
+				"FALCON_BASE_URL": "${input:FALCON_BASE_URL}",
+				"FALCON_MEMBER_CID": "${input:FALCON_MEMBER_CID}",
+				"FALCON_MCP_MODULES": "${input:FALCON_MCP_MODULES}",
+				"FALCON_MCP_TRANSPORT": "${input:FALCON_MCP_TRANSPORT}",
+				"FALCON_MCP_DEBUG": "${input:FALCON_MCP_DEBUG}",
+				"FALCON_MCP_HOST": "${input:FALCON_MCP_HOST}",
+				"FALCON_MCP_PORT": "${input:FALCON_MCP_PORT}",
+				"FALCON_MCP_USER_AGENT_COMMENT": "${input:FALCON_MCP_USER_AGENT_COMMENT}",
+				"FALCON_MCP_STATELESS_HTTP": "${input:FALCON_MCP_STATELESS_HTTP}",
+				"FALCON_MCP_API_KEY": "${input:FALCON_MCP_API_KEY}"
+			},
+			"gallery": "https://api.mcp.github.com",
+			"version": "0.13.0"
+		}
+	},
+	"inputs": [
+		{
+			"id": "FALCON_CLIENT_ID",
+			"type": "promptString",
+			"description": "CrowdStrike API client ID",
+			"password": true
+		},
+		{
+			"id": "FALCON_CLIENT_SECRET",
+			"type": "promptString",
+			"description": "CrowdStrike API client secret",
+			"password": true
+		},
+		{
+			"id": "FALCON_BASE_URL",
+			"type": "promptString",
+			"description": "CrowdStrike API region URL",
+			"password": false,
+			"default": "https://api.crowdstrike.com"
+		},
+		{
+			"id": "FALCON_MEMBER_CID",
+			"type": "promptString",
+			"description": "Child CID for Flight Control (MSSP) support",
+			"password": false
+		},
+		{
+			"id": "FALCON_MCP_MODULES",
+			"type": "promptString",
+			"description": "Comma-separated list of modules to enable",
+			"password": false
+		},
+		{
+			"id": "FALCON_MCP_TRANSPORT",
+			"type": "pickString",
+			"description": "Transport protocol to use",
+			"password": false,
+			"default": "stdio",
+			"options": [
+				"stdio",
+				"sse",
+				"streamable-http"
+			]
+		},
+		{
+			"id": "FALCON_MCP_DEBUG",
+			"type": "promptString",
+			"description": "Enable debug logging",
+			"password": false,
+			"default": "false"
+		},
+		{
+			"id": "FALCON_MCP_HOST",
+			"type": "promptString",
+			"description": "Host to bind to for HTTP transports",
+			"password": false,
+			"default": "127.0.0.1"
+		},
+		{
+			"id": "FALCON_MCP_PORT",
+			"type": "promptString",
+			"description": "Port to listen on for HTTP transports",
+			"password": false,
+			"default": "8000"
+		},
+		{
+			"id": "FALCON_MCP_USER_AGENT_COMMENT",
+			"type": "promptString",
+			"description": "Additional information to include in the User-Agent comment section",
+			"password": false
+		},
+		{
+			"id": "FALCON_MCP_STATELESS_HTTP",
+			"type": "promptString",
+			"description": "Enable stateless HTTP mode for scalable deployments",
+			"password": false,
+			"default": "false"
+		},
+		{
+			"id": "FALCON_MCP_API_KEY",
+			"type": "promptString",
+			"description": "API key for HTTP transport authentication (x-api-key header)",
+			"password": true
+		}
+	]
+}

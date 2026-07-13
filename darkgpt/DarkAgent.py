@@ -1,69 +1,95 @@
-from openai import Client
-import os
-from .dehashed_api import consultar_dominio_dehashed
 import json
-from .functions import Leak_Function
+import os
+
 from dotenv import load_dotenv
+from openai import OpenAI
+
+from .dehashed_api import consultar_dominio_dehashed
+from .functions import Leak_Function
+
 load_dotenv()
 
 AgentPrompt = """
-DarkGPT agent prompt (trimmed for package).
-"""
-RouterPrompt = "Eres un asistente de ciberseguridad que se encarga de clasificar metadatos en funciones para OSINT"
+You are DarkGPT, a cybersecurity assistant. Use any supplied lookup results only
+to answer the user's question. Do not claim a lookup succeeded when it did not.
+""".strip()
+
+RouterPrompt = (
+    "You are a cybersecurity assistant. Use the dehashed_search tool only when "
+    "the user asks for an authorized OSINT-style lookup."
+)
+
 
 class DarkGPT:
+    """CLI-facing wrapper around the OpenAI Responses API."""
+
     def __init__(self):
-        self.model_name = "gpt-4-1106-preview"
-        self.temperature = 0.7
+        self.model_name = os.getenv("OPENAI_MODEL", "gpt-5.6")
         self.functions = Leak_Function
+        api_key = os.getenv("OPENAI_API_KEY")
         try:
-            self.openai_client = Client(api_key=os.getenv("OPENAI_API_KEY"))
+            self.openai_client = OpenAI(api_key=api_key) if api_key else None
         except Exception:
             self.openai_client = None
 
-    def execute_function_call(self, function_prompts: list, message):
-        def mensajes(mensaje):
-            lista_mensajes = [{"role": "system", "content": RouterPrompt},
-                              {"role": "user", "content": mensaje}]
-            return lista_mensajes
+    def execute_function_call(self, message: str) -> str:
+        """Run the model/tool loop and return the final response text.
 
-        functions_prompts = mensajes(message)
+        Responses function calls are returned as output items. Each local tool
+        result must be submitted with its call ID before the model can continue.
+        """
         if not self.openai_client:
-            return "OpenAI client not configured"
+            return "OpenAI client not configured. Set OPENAI_API_KEY and try again."
 
-        response = self.openai_client.chat.completions.create(model="gpt-4",
-                                                              temperature=0,
-                                                              messages=functions_prompts,
-                                                              functions=self.functions)
-        try:
-            preprocessed_output = json.loads(response.choices[0].message.function_call.arguments)
-            processed_output = consultar_dominio_dehashed(preprocessed_output)
-        except Exception:
-            processed_output = "No encontrado"
-        return str(processed_output)
+        response = self.openai_client.responses.create(
+            model=self.model_name,
+            instructions=f"{RouterPrompt}\n\n{AgentPrompt}",
+            input=message,
+            tools=self.functions,
+        )
 
-    def process_history_with_function_output(self, messages: list, function_output: dict):
-        history_json = []
-        history_json.append({"role": "system", "content": AgentPrompt + json.dumps(function_output)})
-        for message in messages:
-            if "USUARIO" in message:
-                history_json.append({"role": "user", "content": message["USUARIO"]})
-            elif "ASISTENTE" in message:
-                history_json.append({"role": "assistant", "content": message["ASISTENTE"]})
-        return history_json
+        # A bounded loop supports a follow-up tool request without allowing an
+        # accidental infinite cycle from a faulty model response.
+        for _ in range(3):
+            function_calls = [
+                item for item in response.output if getattr(item, "type", None) == "function_call"
+            ]
+            if not function_calls:
+                return response.output_text or "No response returned."
 
-    def GPT_with_function_output(self, historial: dict, callback=None):
-        function_output = self.execute_function_call(Leak_Function, historial[-1].get("USUARIO", ""))
-        historial_json = self.process_history_with_function_output(historial, function_output)
-        if not self.openai_client:
-            print(function_output)
-            return
-        respuesta = self.openai_client.chat.completions.create(model=self.model_name,
-                                                               temperature=self.temperature,
-                                                               messages=historial_json,
-                                                               stream=True)
-        for chunk in respuesta:
-            try:
-                print(chunk.choices[0].delta.content or "\n", end="")
-            except Exception:
-                pass
+            tool_outputs = []
+            for call in function_calls:
+                if call.name != "dehashed_search":
+                    result = {"error": f"Unsupported tool: {call.name}"}
+                else:
+                    try:
+                        result = consultar_dominio_dehashed(json.loads(call.arguments))
+                    except (TypeError, json.JSONDecodeError, ValueError) as error:
+                        result = {"error": f"Invalid tool arguments: {error}"}
+                    except Exception as error:
+                        result = {"error": f"Lookup failed: {error}"}
+                tool_outputs.append(
+                    {
+                        "type": "function_call_output",
+                        "call_id": call.call_id,
+                        "output": json.dumps(result),
+                    }
+                )
+
+            response = self.openai_client.responses.create(
+                model=self.model_name,
+                instructions=AgentPrompt,
+                input=[*response.output, *tool_outputs],
+                tools=self.functions,
+            )
+
+        return "The lookup could not be completed after multiple tool requests."
+
+    def GPT_with_function_output(self, historial: list, callback=None) -> str:
+        message = historial[-1].get("USUARIO", "") if historial else ""
+        response_text = self.execute_function_call(message)
+        if callback:
+            callback(response_text)
+        else:
+            print(response_text)
+        return response_text

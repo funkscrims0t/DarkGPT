@@ -21,7 +21,13 @@ Before starting, make sure you have Python installed on your system. This projec
 
    You will need to set up some environment variables for the script to work correctly. Copy the `.env.example` file to a new file named `.env`:
 
+   OPENAI_API_KEY="your_openai_api_key_here"
    DEHASHED_API_KEY="your_dehashed_api_key_here"
+   DEHASHED_USERNAME="your_dehashed_username_here"
+
+   The CLI uses the current `gpt-5.6` model by default through the OpenAI
+   Responses API. If your account requires a different current model, set
+   `OPENAI_MODEL` in `.env`.
 
 3.**Create a virtual environment**
 
